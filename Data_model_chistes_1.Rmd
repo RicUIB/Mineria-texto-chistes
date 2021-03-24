@@ -1,6 +1,6 @@
 ---
-title: "Ayuda la asignación de preferencia colas exploración radiológica basada en analisis textual de la petición"
-author: "Irene & Ricardo"
+title: "Exploración y curado de chistes"
+author: ""
 date: "19/2/2021"
 output: 
   html_document: 
@@ -14,19 +14,18 @@ knitr::opts_chunk$set(echo = TRUE,cache=TRUE)
 library(tidyverse)
 ```
 
-# Primera aproximacion de NLP para el análisis de las peticiones radiaológicas
-
-
+# Primera aproximacion de NLP para el análisis de un conjunto de chistes con título
 ##  Carga de datos
 
 
 
 
 ```{r}
-data_raw=read_delim("data_raw.csv",delim = ";",col_names = FALSE)
+data_raw=read_csv("tots.csv")
 str(data_raw)
 knitr::kable(head(data_raw,20))
-text=data_raw$X2
+colnames(data_raw)
+text=data_raw$texto
 table(unlist(lapply(text,FUN=function(x) Encoding(x))))
 head(text)
 library(dplyr)
@@ -34,7 +33,7 @@ text_df <- tibble(line = 1:length(text), text_raw =text)%>% mutate(Enconding=Enc
 ```
 
 
-## Extracción del diccionario raw empírico desde los diagnosticos
+## Extracción del diccionario raw empírico desde los chistes
 
 Extraemos el dic_raw_radio_1 todas las palabras que aparecen  con separación   espacio. 
 
@@ -63,7 +62,7 @@ nw
 
 ## Construcción del modelo de diccionario
 
-Construiremos una tabla de modelado del corpus de palabras de diagnosis:
+Construiremos una tabla de modelado del corpus de palabras de los chistes:
 
 * Como primary key la word ( las `nw` words) (desde el text_rawutf8)
 * Su frecuencia: número de veces que  aparece en los  diagnósticos
@@ -76,9 +75,9 @@ dic_raw_radio_1 = tibble(word=dic_raw_radio_1) %>% left_join(count_freq,by="word
 ```
 
 
-Ahora vemos claramente cómo podemos mejorar las words para UNIFICARLAS en un único "léxico" que nos permita un tratamiento del nivel de urgencia
+Ahora vemos claramente cómo podemos mejorar las words para UNIFICARLAS en un único "léxico" que nos permita un tratamiento unificado, auqnue las variantes escritas podrían tener siginificado humorístico.
 
-Una ejemplos
+Ejemplos
 
 
 Palabras que contienen "zq"
@@ -101,7 +100,6 @@ Palabras (dos palabras) con :
 dic_raw_radio_1[grep(":",dic_raw_radio_1$word),]
 ```
 ### Añadimos columna  de spelling al diccionario
-
 
 
 Primero veamos algunos ejemplos de las sugerencias
@@ -137,7 +135,7 @@ glimpse(dic_raw_radio_1)
 ```
 
 
-# Primer modelo de curado de las peticiones
+# Primer modelo de curado de los chistes
 
 
 
