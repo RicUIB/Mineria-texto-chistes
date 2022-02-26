@@ -126,7 +126,7 @@ text_df <- tibble(line = 1:length(text), text_raw =text)%>% mutate(Enconding=Enc
 
 ## Extracción del diccionario raw empírico desde los chistes
 
-Extraemos el dic_raw_radio_1 todas las palabras que aparecen  con separación   espacio. 
+Extraemos el dic_raw_1 todas las palabras que aparecen  con separación   espacio. 
 
 Criterios iniciales:
 
@@ -199,8 +199,8 @@ knitr::kable(head(text_raw,20))
 |    1|- Que niño tan feo#- Es mi hija...#- Ah! no sabía que fueras padre.#- Soy madre...#- Ah! si! es verdad, si te vi embarazada.#- Es adoptada#- Mejor me voy |UTF-8     |si     |
 
 ```r
-dic_raw_radio_1=sort(unique(text_raw$word))
-nw=length(dic_raw_radio_1)# Hay 1627 palabras
+dic_raw_1=sort(unique(text_raw$word))
+nw=length(dic_raw_1)# Hay 1627 palabras
 nw
 ```
 
@@ -220,7 +220,7 @@ Construiremos una tabla de modelado del corpus de palabras de los chistes:
 ```r
 count_freq=text_raw %>% group_by(word) %>% summarise(N=n())
 
-dic_raw_radio_1 = tibble(word=dic_raw_radio_1) %>% left_join(count_freq,by="word")
+dic_raw_1 = tibble(word=dic_raw_1) %>% left_join(count_freq,by="word")
 ```
 
 
@@ -233,7 +233,7 @@ Palabras que contienen "zq"
 
 
 ```r
-dic_raw_radio_1[grep("zq",dic_raw_radio_1$word),]
+dic_raw_1[grep("zq",dic_raw_1$word),]
 ```
 
 <div class="kable-table">
@@ -250,7 +250,7 @@ Palabras que  contienen "ch"
 
 
 ```r
-dic_raw_radio_1[grep("(ch)",dic_raw_radio_1$word),]
+dic_raw_1[grep("(ch)",dic_raw_1$word),]
 ```
 
 <div class="kable-table">
@@ -374,7 +374,7 @@ Palabras (dos palabras) con :
 
 
 ```r
-dic_raw_radio_1[grep(":",dic_raw_radio_1$word),]
+dic_raw_1[grep(":",dic_raw_1$word),]
 ```
 
 <div class="kable-table">
@@ -399,19 +399,7 @@ library("hunspell")
 #https://github.com/titoBouzout/Dictionaries # do
 #es=dictionary(lang = "diccionarios/es_ES.dic", affix = "diccionarios/es_ES.dic", add_words = NULL,  cache = FALSE)
 es_ES<- dictionary("diccionarios/es_ES.dic")
-print(es_ES)
-```
-
-```
-## <hunspell dictionary>
-##  affix: C:\Users\t169\Documents\Docencia\docencia2122\MDyT\Mineria-texto-chistes\diccionarios\es_ES.aff 
-##  dictionary: C:\Users\t169\Documents\Docencia\docencia2122\MDyT\Mineria-texto-chistes\diccionarios\es_ES.dic 
-##  encoding: ISO8859-1 
-##  wordchars: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþ 
-##  added: 0 custom words
-```
-
-```r
+#print(es_ES)
 list_dictionaries()# estos son los que  vienen por defecto
 ```
 
@@ -473,17 +461,17 @@ de momento tomaremos  sólo la primera sugerencia, aunque guardaremos todas.
 
 
 ```r
-list_sugerences= sapply(dic_raw_radio_1$word, FUN=function(x) hunspell_suggest(x,dic=es_ES))
+list_sugerences= sapply(dic_raw_1$word, FUN=function(x) hunspell_suggest(x,dic=es_ES))
 
 
 
-dic_raw_radio_1$list_sugerence_first=sapply(list_sugerences, FUN=function(x) x[1])
-dic_raw_radio_1$list_sugerence_all=sapply(list_sugerences,
+dic_raw_1$list_sugerence_first=sapply(list_sugerences, FUN=function(x) x[1])
+dic_raw_1$list_sugerence_all=sapply(list_sugerences,
                                           FUN=function(x){
                                             if(length(x)>=1) {return(paste(x,collapse=","))}
                                             if(length(x)==0){return(NA)}
                                             })
-glimpse(dic_raw_radio_1)
+glimpse(dic_raw_1)
 ```
 
 ```
@@ -502,7 +490,7 @@ glimpse(dic_raw_radio_1)
 
 
 ```r
-knitr::kable(head(dic_raw_radio_1,20))
+knitr::kable(head(dic_raw_1,20))
 ```
 
 
@@ -537,14 +525,14 @@ knitr::kable(head(dic_raw_radio_1,20))
 
 
 ```r
-write_excel_csv2(x=dic_raw_radio_1,file="dic_raw_radio_1_2.csv")
+write_excel_csv2(x=dic_raw_1,file="dic_raw_1_2.csv")
 ```
 
 
 
 ```r
-dic_raw_radio_1_long_peticion = dic_raw_radio_1 %>% right_join(text_raw,by="word")
-write_excel_csv2(x=dic_raw_radio_1_long_peticion,file="dic_raw_radio_1_2_long_peticion.csv")
+dic_raw_1_long_peticion = dic_raw_1 %>% right_join(text_raw,by="word")
+write_excel_csv2(x=dic_raw_1_long_peticion,file="dic_raw_1_2_long_peticion.csv")
 ```
 
 

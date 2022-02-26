@@ -351,7 +351,7 @@ text_df &lt;- tibble(line = 1:length(text), text_raw =text)%&gt;% mutate(Encondi
 </div>
 <div id="extracción-del-diccionario-raw-empírico-desde-los-chistes" class="section level2" number="1.2">
 <h2><span class="header-section-number">1.2</span> Extracción del diccionario raw empírico desde los chistes</h2>
-<p>Extraemos el dic_raw_radio_1 todas las palabras que aparecen con separación espacio.</p>
+<p>Extraemos el dic_raw_1 todas las palabras que aparecen con separación espacio.</p>
 <p>Criterios iniciales:</p>
 <ul>
 <li>Decidimos enconding a UTF-8 columna text_utf8 si hay que depurar por enconding habrá que ver cómo.</li>
@@ -516,8 +516,8 @@ glimpse(text_raw)</code></pre>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>dic_raw_radio_1=sort(unique(text_raw$word))
-nw=length(dic_raw_radio_1)# Hay 1627 palabras
+<pre class="r"><code>dic_raw_1=sort(unique(text_raw$word))
+nw=length(dic_raw_1)# Hay 1627 palabras
 nw</code></pre>
 <pre><code>## [1] 3948</code></pre>
 </div>
@@ -531,11 +531,11 @@ nw</code></pre>
 </ul>
 <pre class="r"><code>count_freq=text_raw %&gt;% group_by(word) %&gt;% summarise(N=n())
 
-dic_raw_radio_1 = tibble(word=dic_raw_radio_1) %&gt;% left_join(count_freq,by=&quot;word&quot;)</code></pre>
+dic_raw_1 = tibble(word=dic_raw_1) %&gt;% left_join(count_freq,by=&quot;word&quot;)</code></pre>
 <p>Ahora vemos claramente cómo podemos mejorar las words para UNIFICARLAS en un único “léxico” que nos permita un tratamiento unificado, auqnue las variantes escritas podrían tener significado humorístico.</p>
 <p>Ejemplos</p>
 <p>Palabras que contienen “zq”</p>
-<pre class="r"><code>dic_raw_radio_1[grep(&quot;zq&quot;,dic_raw_radio_1$word),]</code></pre>
+<pre class="r"><code>dic_raw_1[grep(&quot;zq&quot;,dic_raw_1$word),]</code></pre>
 <div class="kable-table">
 <table>
 <thead>
@@ -557,7 +557,7 @@ dic_raw_radio_1 = tibble(word=dic_raw_radio_1) %&gt;% left_join(count_freq,by=&q
 </table>
 </div>
 <p>Palabras que contienen “ch”</p>
-<pre class="r"><code>dic_raw_radio_1[grep(&quot;(ch)&quot;,dic_raw_radio_1$word),]</code></pre>
+<pre class="r"><code>dic_raw_1[grep(&quot;(ch)&quot;,dic_raw_1$word),]</code></pre>
 <div class="kable-table">
 <table>
 <thead>
@@ -1007,7 +1007,7 @@ dic_raw_radio_1 = tibble(word=dic_raw_radio_1) %&gt;% left_join(count_freq,by=&q
 </table>
 </div>
 <p>Palabras (dos palabras) con :</p>
-<pre class="r"><code>dic_raw_radio_1[grep(&quot;:&quot;,dic_raw_radio_1$word),]</code></pre>
+<pre class="r"><code>dic_raw_1[grep(&quot;:&quot;,dic_raw_1$word),]</code></pre>
 <div class="kable-table">
 <table>
 <thead>
@@ -1040,14 +1040,8 @@ library(&quot;hunspell&quot;)
 #https://github.com/titoBouzout/Dictionaries # do
 #es=dictionary(lang = &quot;diccionarios/es_ES.dic&quot;, affix = &quot;diccionarios/es_ES.dic&quot;, add_words = NULL,  cache = FALSE)
 es_ES&lt;- dictionary(&quot;diccionarios/es_ES.dic&quot;)
-print(es_ES)</code></pre>
-<pre><code>## &lt;hunspell dictionary&gt;
-##  affix: C:\Users\t169\Documents\Docencia\docencia2122\MDyT\Mineria-texto-chistes\diccionarios\es_ES.aff 
-##  dictionary: C:\Users\t169\Documents\Docencia\docencia2122\MDyT\Mineria-texto-chistes\diccionarios\es_ES.dic 
-##  encoding: ISO8859-1 
-##  wordchars: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþ 
-##  added: 0 custom words</code></pre>
-<pre class="r"><code>list_dictionaries()# estos son los que  vienen por defecto</code></pre>
+#print(es_ES)
+list_dictionaries()# estos son los que  vienen por defecto</code></pre>
 <pre><code>## [1] &quot;en_AU&quot; &quot;en_CA&quot; &quot;en_GB&quot; &quot;en_US&quot;</code></pre>
 <pre class="r"><code>hunspell_check(c(&quot;bieja&quot;,&quot;colon&quot;,&quot;colón&quot;),dic= es_ES)</code></pre>
 <pre><code>## [1] FALSE  TRUE FALSE</code></pre>
@@ -1080,17 +1074,17 @@ hunspell_analyze(palabras,dic=es_ES)</code></pre>
 ## [[6]]
 ## [1] &quot; st:amador&quot;      &quot;a st:mador fl:a&quot;</code></pre>
 <p>de momento tomaremos sólo la primera sugerencia, aunque guardaremos todas.</p>
-<pre class="r"><code>list_sugerences= sapply(dic_raw_radio_1$word, FUN=function(x) hunspell_suggest(x,dic=es_ES))
+<pre class="r"><code>list_sugerences= sapply(dic_raw_1$word, FUN=function(x) hunspell_suggest(x,dic=es_ES))
 
 
 
-dic_raw_radio_1$list_sugerence_first=sapply(list_sugerences, FUN=function(x) x[1])
-dic_raw_radio_1$list_sugerence_all=sapply(list_sugerences,
+dic_raw_1$list_sugerence_first=sapply(list_sugerences, FUN=function(x) x[1])
+dic_raw_1$list_sugerence_all=sapply(list_sugerences,
                                           FUN=function(x){
                                             if(length(x)&gt;=1) {return(paste(x,collapse=&quot;,&quot;))}
                                             if(length(x)==0){return(NA)}
                                             })
-glimpse(dic_raw_radio_1)</code></pre>
+glimpse(dic_raw_1)</code></pre>
 <pre><code>## Rows: 3,948
 ## Columns: 4
 ## $ word                 &lt;chr&gt; &quot;0&quot;, &quot;1&quot;, &quot;10&quot;, &quot;100&quot;, &quot;1000&quot;, &quot;12&quot;, &quot;120&quot;, &quot;14&quot;,~
@@ -1102,7 +1096,7 @@ glimpse(dic_raw_radio_1)</code></pre>
 </div>
 <div id="primer-modelo-de-curado-de-los-chistes" class="section level1" number="2">
 <h1><span class="header-section-number">2</span> Primer modelo de curado de los chistes</h1>
-<pre class="r"><code>knitr::kable(head(dic_raw_radio_1,20))</code></pre>
+<pre class="r"><code>knitr::kable(head(dic_raw_1,20))</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -1237,9 +1231,9 @@ glimpse(dic_raw_radio_1)</code></pre>
 </table>
 <div id="salvar-en-excel" class="section level3" number="2.0.1">
 <h3><span class="header-section-number">2.0.1</span> Salvar en excel</h3>
-<pre class="r"><code>write_excel_csv2(x=dic_raw_radio_1,file=&quot;dic_raw_radio_1_2.csv&quot;)</code></pre>
-<pre class="r"><code>dic_raw_radio_1_long_peticion = dic_raw_radio_1 %&gt;% right_join(text_raw,by=&quot;word&quot;)
-write_excel_csv2(x=dic_raw_radio_1_long_peticion,file=&quot;dic_raw_radio_1_2_long_peticion.csv&quot;)</code></pre>
+<pre class="r"><code>write_excel_csv2(x=dic_raw_1,file=&quot;dic_raw_1_2.csv&quot;)</code></pre>
+<pre class="r"><code>dic_raw_1_long_peticion = dic_raw_1 %&gt;% right_join(text_raw,by=&quot;word&quot;)
+write_excel_csv2(x=dic_raw_1_long_peticion,file=&quot;dic_raw_1_2_long_peticion.csv&quot;)</code></pre>
 </div>
 <div id="siguiente-paso-tratamineto-de-los-datos-curados-y-generación-de-las-document-term-matrix" class="section level2" number="2.1">
 <h2><span class="header-section-number">2.1</span> Siguiente paso tratamineto de los datos curados y generación de las Document Term Matrix</h2>
