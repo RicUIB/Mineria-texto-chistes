@@ -7,6 +7,7 @@ output:
     toc: yes
     number_sections: yes
     df_print: kable
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -18,16 +19,15 @@ library(tidyverse)
 ##  Carga de datos
 
 
-
-
 ```{r}
 data_raw=read_csv("tots.csv")
 str(data_raw)
 knitr::kable(head(data_raw,20))
 colnames(data_raw)
 text=data_raw$texto
-table(unlist(lapply(text,FUN=function(x) Encoding(x))))
+tabla=table(unlist(lapply(text,FUN=function(x) Encoding(x))))
 head(text)
+head(tabla)
 library(dplyr)
 text_df <- tibble(line = 1:length(text), text_raw =text)%>% mutate(Enconding=Encoding(text_raw),text_utf8=enc2utf8(text))
 ```
@@ -44,7 +44,7 @@ Criterios iniciales:
 * Todas las MAYÚSCULAS a MINÚSCULAS
 * De momento NO SE ELIMINAN DIGITOS: se quedan tal cual, hay que distinguir los de los dígitos de años.
 * No catalogamos idiomas....  se supone que todo está en castellano o términos técnicos que añadiremos
-* Castellano es toda palabra o   derivado de palabra que se encuentre en un spelling standar de castellano que podemos ir adaptando.
+* Castellano es toda palabra o   derivado de palabra que se encuentre en un spelling estándar de castellano que podemos ir adaptando.
 
 
 
@@ -53,8 +53,8 @@ Criterios iniciales:
 library(tidytext)
 glimpse(text_df)
 text_raw=text_df %>% unnest_tokens(word, text_utf8)
-text_raw
 glimpse(text_raw)
+knitr::kable(head(text_raw,20))
 dic_raw_radio_1=sort(unique(text_raw$word))
 nw=length(dic_raw_radio_1)# Hay 1627 palabras
 nw
@@ -64,7 +64,7 @@ nw
 
 Construiremos una tabla de modelado del corpus de palabras de los chistes:
 
-* Como primary key la word ( las `nw` words) (desde el text_rawutf8)
+* Como primary key la word ( las `nw` words) (desde el text_raw en utf8)
 * Su frecuencia: número de veces que  aparece en los  diagnósticos
 * Si es correcta  según un spelling de español  de España (hay que buscar... qué hay mejor)
 
@@ -75,7 +75,7 @@ dic_raw_radio_1 = tibble(word=dic_raw_radio_1) %>% left_join(count_freq,by="word
 ```
 
 
-Ahora vemos claramente cómo podemos mejorar las words para UNIFICARLAS en un único "léxico" que nos permita un tratamiento unificado, auqnue las variantes escritas podrían tener siginificado humorístico.
+Ahora vemos claramente cómo podemos mejorar las words para UNIFICARLAS en un único "léxico" que nos permita un tratamiento unificado, auqnue las variantes escritas podrían tener significado humorístico.
 
 Ejemplos
 
@@ -102,18 +102,21 @@ dic_raw_radio_1[grep(":",dic_raw_radio_1$word),]
 ### Añadimos columna  de spelling al diccionario
 
 
-Primero veamos algunos ejemplos de las sugerencias
+Primero veamos algunos ejemplos de las sugerencias: ver manual en de  [hunspell](https://docs.ropensci.org/hunspell/articles/intro.html).
+[Github diccionarios open office](https://github.com/LibreOffice/dictionaries)
 
 ```{r}
 library("spelling")
 library("hunspell")
 #https://github.com/titoBouzout/Dictionaries # do
-es=dictionary(lang = "es_ES", affix = NULL, add_words = NULL,
-  cache = TRUE)
-list_dictionaries()
-hunspell_check(c("bieja","colon","colón"),dic= "es_ES")
-
-hunspell_suggest(c("bieja","colon","colón"),dic="es_ES")
+#es=dictionary(lang = "diccionarios/es_ES.dic", affix = "diccionarios/es_ES.dic", add_words = NULL,  cache = FALSE)
+es_ES<- dictionary("diccionarios/es_ES.dic")
+print(es_ES)
+list_dictionaries()# estos son los que  vienen por defecto
+hunspell_check(c("bieja","colon","colón"),dic= es_ES)
+hunspell_suggest(c("bieja","colon","colón"),dic=es_ES)
+palabras=c("amor", "amoroso", "amorosamente", "amado", "amante", "amador")
+hunspell_analyze(palabras,dic=es_ES)
 ```
 
 de momento tomaremos  sólo la primera sugerencia, aunque guardaremos todas.
@@ -121,7 +124,7 @@ de momento tomaremos  sólo la primera sugerencia, aunque guardaremos todas.
 
 
 ```{r}
-list_sugerences= sapply(dic_raw_radio_1$word, FUN=function(x) hunspell_suggest(x,dic="es_ES"))
+list_sugerences= sapply(dic_raw_radio_1$word, FUN=function(x) hunspell_suggest(x,dic=es_ES))
 
 
 
@@ -155,7 +158,6 @@ write_excel_csv2(x=dic_raw_radio_1,file="dic_raw_radio_1_2.csv")
 
 ```{r}
 dic_raw_radio_1_long_peticion = dic_raw_radio_1 %>% right_join(text_raw,by="word")
-
 write_excel_csv2(x=dic_raw_radio_1_long_peticion,file="dic_raw_radio_1_2_long_peticion.csv")
 ```
 
@@ -164,12 +166,8 @@ write_excel_csv2(x=dic_raw_radio_1_long_peticion,file="dic_raw_radio_1_2_long_pe
 
 
 Primera aproximación generación dela DTM del corpus de peticiones curadas. Cruzar estos datos con las prioridades.
+Podéis hacerlo con tidytext o con tm (o con quanteda).
 
-```
-DTM=table(text_df$line,text_df$word)# Document Text Matrix
-sum(DTM)
-colSums(DTM)
-row_sums(DTM)
-```
+## Más chistes con metadatos
 
-
+En el fichero de este git "chistes_con_metadatos.csv" hay más chistes con dos columnas de metadatos para practicar.
