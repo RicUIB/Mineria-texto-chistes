@@ -193,7 +193,7 @@ pre code {
 <h1><span class="header-section-number">1</span> Primera aproximacion de NLP para el análisis de un conjunto de chistes con título</h1>
 <div id="carga-de-datos" class="section level2" number="1.1">
 <h2><span class="header-section-number">1.1</span> Carga de datos</h2>
-<pre class="r"><code>data_raw=read_csv(&quot;tots.csv&quot;)</code></pre>
+<pre class="r"><code>data_raw=read_csv(&quot;data/tots.csv&quot;)</code></pre>
 <pre><code>## Rows: 840 Columns: 3</code></pre>
 <pre><code>## -- Column specification --------------------------------------------------------
 ## Delimiter: &quot;,&quot;
@@ -347,11 +347,12 @@ head(text)</code></pre>
 ## unknown   UTF-8 
 ##      62     778</code></pre>
 <pre class="r"><code>library(dplyr)
-text_df &lt;- tibble(line = 1:length(text), text_raw =text)%&gt;% mutate(Enconding=Encoding(text_raw),text_utf8=enc2utf8(text))</code></pre>
+text_df &lt;- tibble(line = 1:length(text), text_raw =text)%&gt;%
+  mutate(Enconding=Encoding(text_raw),text_utf8=enc2utf8(text))</code></pre>
 </div>
 <div id="extracción-del-diccionario-raw-empírico-desde-los-chistes" class="section level2" number="1.2">
 <h2><span class="header-section-number">1.2</span> Extracción del diccionario raw empírico desde los chistes</h2>
-<p>Extraemos el dic_raw_1 todas las palabras que aparecen con separación espacio.</p>
+<p>Extraemos al dic_raw_1 todas las palabras que aparecen con separación espacio.</p>
 <p>Criterios iniciales:</p>
 <ul>
 <li>Decidimos enconding a UTF-8 columna text_utf8 si hay que depurar por enconding habrá que ver cómo.</li>
@@ -1231,13 +1232,13 @@ glimpse(dic_raw_1)</code></pre>
 </table>
 <div id="salvar-en-excel" class="section level3" number="2.0.1">
 <h3><span class="header-section-number">2.0.1</span> Salvar en excel</h3>
-<pre class="r"><code>write_excel_csv2(x=dic_raw_1,file=&quot;dic_raw_1_2.csv&quot;)</code></pre>
-<pre class="r"><code>dic_raw_1_long_peticion = dic_raw_1 %&gt;% right_join(text_raw,by=&quot;word&quot;)
-write_excel_csv2(x=dic_raw_1_long_peticion,file=&quot;dic_raw_1_2_long_peticion.csv&quot;)</code></pre>
+<pre class="r"><code>write_excel_csv2(x=dic_raw_1,file=&quot;data/dic_raw_1_chistes.csv&quot;)</code></pre>
+<pre class="r"><code>dic_raw_1_long_chistes= dic_raw_1 %&gt;% right_join(text_raw,by=&quot;word&quot;)
+write_excel_csv2(x=dic_raw_1_long_chistes,file=&quot;data/dic_raw_1_2_long_chistes.csv&quot;)</code></pre>
 </div>
 <div id="siguiente-paso-tratamineto-de-los-datos-curados-y-generación-de-las-document-term-matrix" class="section level2" number="2.1">
 <h2><span class="header-section-number">2.1</span> Siguiente paso tratamineto de los datos curados y generación de las Document Term Matrix</h2>
-<p>Primera aproximación generación dela DTM del corpus de peticiones curadas. Cruzar estos datos con las prioridades. Podéis hacerlo con tidytext o con tm (o con quanteda).</p>
+<p>Primera aproximación generación dela DTM del corpus de peticiones curadas. Cruzar estos datos con los tópicos/key words de losa chistes. Podéis hacerlo con tidytext o con tm (o con quanteda).</p>
 </div>
 <div id="más-chistes-con-metadatos" class="section level2" number="2.2">
 <h2><span class="header-section-number">2.2</span> Más chistes con metadatos</h2>

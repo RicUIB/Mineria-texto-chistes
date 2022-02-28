@@ -3,13 +3,20 @@ title: "Exploración y curado de chistes"
 author: ''
 date: "28/02/2022"
 output:
-  html_document:
+  html_document: 
     toc: yes
     number_sections: yes
-    df_print: kable
     keep_md: yes
+  word_document:
+    toc: yes
   pdf_document:
     toc: yes
+    number_sections: yes
+linkcolor: red
+header-includes: \renewcommand{\contentsname}{Contenidos}
+citecolor: blue
+toccolor: blue
+urlcolor: blue
 ---
 
 
@@ -20,7 +27,7 @@ output:
 
 
 ```r
-data_raw=read_csv("tots.csv")
+data_raw=read_csv("data/tots.csv")
 ```
 
 ```
@@ -122,13 +129,14 @@ head(tabla)
 
 ```r
 library(dplyr)
-text_df <- tibble(line = 1:length(text), text_raw =text)%>% mutate(Enconding=Encoding(text_raw),text_utf8=enc2utf8(text))
+text_df <- tibble(line = 1:length(text), text_raw =text)%>%
+  mutate(Enconding=Encoding(text_raw),text_utf8=enc2utf8(text))
 ```
 
 
 ## Extracción del diccionario raw empírico desde los chistes
 
-Extraemos el dic_raw_1 todas las palabras que aparecen  con separación   espacio. 
+Extraemos al dic_raw_1 todas las palabras que aparecen  con separación   espacio. 
 
 Criterios iniciales:
 
@@ -527,21 +535,21 @@ knitr::kable(head(dic_raw_1,20))
 
 
 ```r
-write_excel_csv2(x=dic_raw_1,file="dic_raw_1_2.csv")
+write_excel_csv2(x=dic_raw_1,file="data/dic_raw_1_chistes.csv")
 ```
 
 
 
 ```r
-dic_raw_1_long_peticion = dic_raw_1 %>% right_join(text_raw,by="word")
-write_excel_csv2(x=dic_raw_1_long_peticion,file="dic_raw_1_2_long_peticion.csv")
+dic_raw_1_long_chistes= dic_raw_1 %>% right_join(text_raw,by="word")
+write_excel_csv2(x=dic_raw_1_long_chistes,file="data/dic_raw_1_2_long_chistes.csv")
 ```
 
 
 ## Siguiente paso tratamineto de los datos curados y generación de las Document Term Matrix
 
 
-Primera aproximación generación dela DTM del corpus de peticiones curadas. Cruzar estos datos con las prioridades.
+Primera aproximación generación dela DTM del corpus de peticiones curadas. Cruzar estos datos con los tópicos/key words de losa chistes.
 Podéis hacerlo con tidytext o con tm (o con quanteda).
 
 ## Más chistes con metadatos
