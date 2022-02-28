@@ -1,13 +1,15 @@
 ---
 title: "Exploración y curado de chistes"
-author: ""
-date: "19/2/2021"
-output: 
-  html_document: 
+author: ''
+date: "28/02/2022"
+output:
+  html_document:
     toc: yes
     number_sections: yes
     df_print: kable
     keep_md: yes
+  pdf_document:
+    toc: yes
 ---
 
 
