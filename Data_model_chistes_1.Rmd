@@ -1,7 +1,7 @@
 ---
 title: "Exploración y curado de chistes"
 author: ''
-date: "28/02/2022"
+date: "16/05/2022"
 output:
   html_document: 
     toc: yes
@@ -20,7 +20,7 @@ urlcolor: blue
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,cache=TRUE)
+knitr::opts_chunk$set(echo = TRUE,cache=FALSE)
 library(tidyverse)
 ```
 
@@ -172,11 +172,44 @@ write_excel_csv2(x=dic_raw_1_long_chistes,file="data/dic_raw_1_2_long_chistes.cs
 ```
 
 
-## Siguiente paso tratamineto de los datos curados y generación de las Document Term Matrix
+## Siguiente paso tratamiento de los datos curados y generación de las Document Term Matrix
 
 
 Primera aproximación generación dela DTM del corpus de peticiones curadas. Cruzar estos datos con los tópicos/key words de losa chistes.
 Podéis hacerlo con tidytext o con tm (o con quanteda).
+
+
+
+# Word to vect
+
+
+
+```{r}
+# devtools::install_github("bmschmidt/wordVectors",force=TRUE)
+library(wordVectors)
+library(magrittr) # pipes
+
+if(!file.exists("chistes.txt")) {
+chistes=paste(text_raw$word,collapse=" ")
+writeLines(text=chistes,con = file("chistes.txt"))}
+
+
+model=train_word2vec("chistes.txt",output_file="chistes.bin",vectors=10,threads=1,window=12, cbow=FALSE,min_count=5,iter=5, force=TRUE, negative_samples=5)
+
+
+modelo=read.vectors("chistes.bin")
+str(modelo)
+
+# consultar la vignettes de help(package="wordVectors")
+```
+
+
+
+
+
+# Naive bayes
+Podéis utilizar algún algoritmo  de naivebayes con los metadatos  de los chistes (fichero que se explica abajo) o con topic models.
+
 
 ## Más chistes con metadatos
 
