@@ -1161,7 +1161,7 @@ str(modelo)
 ##   .. ..- attr(*, "dimnames")=List of 2
 ##   .. .. ..$ : chr [1:494] "</s>" "que" "y" "la" ...
 ##   .. .. ..$ : NULL
-##   ..@ .cache:<environment: 0x000000002f4d70d8> 
+##   ..@ .cache:<environment: 0x000000002f4e8b98> 
 ##   ..$ dim     : int [1:2] 494 10
 ##   ..$ dimnames:List of 2
 ##   .. ..$ : chr [1:494] "</s>" "que" "y" "la" ...
