@@ -96,7 +96,7 @@ glimpse(texto_df)
 
 texto_tokens=texto_df %>%  unnest_tokens(word, texto_curado)
 glimpse(texto_tokens)
-knitr::kable(head(text_raw,20))
+knitr::kable(head(texto_tokens,20))
 dic_raw_1=sort(unique(texto_tokens$word))
 nw=length(dic_raw_1)# 
 nw # número de poalbaras distintas
@@ -112,7 +112,6 @@ Construiremos una tabla de modelado del corpus de palabras de los chistes:
 
 ```{r}
 count_freq=texto_tokens %>% group_by(word) %>% summarise(N=n())
-
 dic_raw_1 = tibble(word=dic_raw_1) %>% left_join(count_freq,by="word")
 ```
 
