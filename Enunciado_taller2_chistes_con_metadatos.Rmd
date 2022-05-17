@@ -218,7 +218,7 @@ texto_tokens$N=1
 DTM=cast_dtm(texto_tokens,document="titulo",term="word_curada",value=N)
 MM=as.matrix(DTM)
 titulos=row.names(MM)
-MM=as.tibble(MM)
+MM=as_tibble(MM)
 MM$titulo=titulos
 ```
 
@@ -228,9 +228,9 @@ MM$titulo=titulos
 
 
 ```{r}
-C1=texto_df %>% select(titulo,C1)
+C1=texto_df %>% select(titulo, C1)
 
-df= C1 %>% right_join(MM %>%,by="titulo")
+df= C1 %>% right_join(MM,by="titulo")
 glimpse(df)
 
 
@@ -268,7 +268,7 @@ https://github.com/bnosac/word2vec
 #install.packages("word2vec")
 
 library(word2vec)
-txt_clean=txt_clean_word2vec(x=text_df$text_utf8, ascii = FALSE, alpha = TRUE, tolower = TRUE, trim = TRUE)
+txt_clean=txt_clean_word2vec(x=data_raw$texto, ascii = FALSE, alpha = TRUE, tolower = TRUE, trim = TRUE)
 str(txt_clean)
 model=word2vec(x=txt_clean,
   type = "skip-gram",
