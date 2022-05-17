@@ -1,0 +1,341 @@
+---
+title: "Exploración y curado de chistes"
+author: ''
+date: "16/05/2022"
+output:
+  html_document: 
+    toc: yes
+    number_sections: yes
+    keep_md: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+    number_sections: yes
+linkcolor: red
+header-includes: \renewcommand{\contentsname}{Contenidos}
+citecolor: blue
+toccolor: blue
+urlcolor: blue
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,cache=TRUE)
+library(tidyverse)
+```
+
+# Análisis de un conjunto de chistes con metadatos 
+
+
+Algunas ayudas y ejemplos en "Data_model_chistes2.Rmd", se ha cambiado a la libreria "word2vec" más reciente pero menos comentada.
+
+El fichero "data/chistes_con_metadatos_curado.csv"  contiene  unos 7170 chistes de la web [100chistes.com](https://www.1000chistes.com/) y de [pintamania](https://www.pintamania.com/es/chistes).
+
+
+
+##  Carga de datos
+
+
+Los datos están en un fichero separado por ";"  contien 5 variables 
+
+
+* origen: la web de origen del chiste; 100 chistes o pintamanía `factor`
+* titulo: EL título del chiste `character`.
+* categoria: cortos|malos|Jaimito; son  una variable `character`  de categorías separadas por "|"
+* palabra_clave: políticos|argentinos; son una una variable `character` de palabras clave separadas por "|"
+tags; 
+* votos: Número de votos `integer`; solo para pintamania
+* texto: tipo character;  es el texto del chiste en UTF-8 separado por "" `character`. 
+
+
+
+
+```{r}
+data_raw=read_csv("data/chistes_con_metadatos_curado.csv",col_names=TRUE)
+glimpse(data_raw)
+```
+
+
+```{r}
+knitr::kable(head(data_raw,20))
+```
+
+
+## Extracción del diccionario raw empírico desde los chistes
+
+Extraemos al dic_raw_1 todas las palabras que aparecen  con separación   espacio. 
+
+Criterios iniciales:
+
+* Decidimos enconding a UTF-8  columna  text_utf8 si hay que depurar por enconding habrá que ver cómo.
+* Hay que decidir qué se hace con los CARACTERES SPECIALES:{,:; () ¿?!!}. De momento los voy a eliminar 
+* Todas las MAYÚSCULAS a MINÚSCULAS
+* De momento NO SE ELIMINAN DIGITOS: se quedan tal cual, hay que distinguir los de los dígitos de años.
+* No catalogamos idiomas....  se supone que todo está en castellano o términos técnicos que añadiremos
+* Castellano es toda palabra o   derivado de palabra que se encuentre en un spelling estándar de castellano que podemos ir adaptando.
+
+
+
+
+```{r}
+library(tidytext)
+library(stringr)
+texto_df=data_raw
+glimpse(texto_df)
+#arreglo categorias a columnas distintas se podrían pasar a arrays.
+texto_df = texto_df %>% separate(col=c("categorias"),sep="\\|",into=paste0("C",1:5),fill="right")
+texto_df = texto_df %>% separate(col=c("palabra_clave"),sep="\\|",into=paste0("palabra",1:5),fill="right")
+texto_df =texto_df %>% mutate(texto_curado=str_squish(str_replace_all(texto, "\\:|-|#|_", " ")))
+glimpse(texto_df)
+
+## str_replace_all(text, "\\:|-|#", " ") reemplazo ":" o "-" o "#" por espacio
+# esto es necesario para arreglar "hola:Pepe" que quedaría cómo una palabra si elimino:
+## str_squish quita espacios  repetidos
+
+texto_tokens=texto_df %>%  unnest_tokens(word, texto_curado)
+glimpse(texto_tokens)
+knitr::kable(head(text_raw,20))
+dic_raw_1=sort(unique(texto_tokens$word))
+nw=length(dic_raw_1)# 
+nw # número de poalbaras distintas
+```
+
+## Construcción del modelo de diccionario
+
+Construiremos una tabla de modelado del corpus de palabras de los chistes:
+
+* Como primary key la word ( las `nw` words) (desde el text_raw en utf8)
+* Su frecuencia: número de veces que  aparece en los  chistes
+* Si es correcta  según un spelling de español  de España (hay que buscar... qué hay mejor)
+
+```{r}
+count_freq=texto_tokens %>% group_by(word) %>% summarise(N=n())
+
+dic_raw_1 = tibble(word=dic_raw_1) %>% left_join(count_freq,by="word")
+```
+
+
+Ahora vemos claramente cómo podemos mejorar las words para UNIFICARLAS en un único "léxico" que nos permita un tratamiento unificado, auqnue las variantes escritas podrían tener significado humorístico.
+
+Ejemplos
+
+
+Palabras que contienen "zq"
+
+```{r}
+dic_raw_1[grep("zq",dic_raw_1$word),]
+```
+
+
+Palabras que  contienen "ch"
+
+```{r}
+dic_raw_1[grep("(ch)",dic_raw_1$word),]
+```
+
+
+Palabras (dos palabras) con :
+
+```{r}
+dic_raw_1[grep(":",dic_raw_1$word),]
+```
+### Añadimos columna  de spelling al diccionario
+
+
+Primero veamos algunos ejemplos de las sugerencias: ver manual en de  [hunspell](https://docs.ropensci.org/hunspell/articles/intro.html).
+[Github diccionarios open office](https://github.com/LibreOffice/dictionaries)
+
+```{r}
+library("spelling")
+library("hunspell")
+#https://github.com/titoBouzout/Dictionaries # do
+#es=dictionary(lang = "diccionarios/es_ES.dic", affix = "diccionarios/es_ES.dic", add_words = NULL,  cache = FALSE)
+es_ES<- dictionary("diccionarios/es_ES.dic")
+#print(es_ES)
+list_dictionaries()# estos son los que  vienen por defecto
+hunspell_check(c("bieja","colon","colón"),dic= es_ES)
+hunspell_suggest(c("bieja","colon","colón"),dic=es_ES)
+palabras=c("amor", "amoroso", "amorosamente", "amado", "amante", "amador")
+hunspell_analyze(palabras,dic=es_ES)
+```
+
+Eliminaremos las palabras que aprezcan menos de $K_{min}=3$ o $K_{max}=500$ veces y números y  tomaremos la primera sugerencia para las palabras que den incorrectas y solo la primera sugerencia.
+
+
+
+```{r}
+K_min=3
+K_max=500
+dic_raw_1 = dic_raw_1 %>% filter(N>K_min & N<K_max )
+dim(dic_raw_1)
+dic_raw_1= dic_raw_1[-grep("\\w*[0-9]+\\w*\\s*",dic_raw_1$word),]
+dim(dic_raw_1)
+
+palabras_incorrectas= sapply(dic_raw_1$word, FUN=function(x) hunspell_check(x,dic=es_ES))
+table(palabras_incorrectas)
+
+lista_sugerencias= sapply(dic_raw_1$word, FUN=function(x) hunspell_suggest(x,dic=es_ES))
+
+# nos quedamos con la primera tanto para correctas como para incorrectas
+
+dic_raw_1$word_curada=sapply(lista_sugerencias, FUN=function(x) x[1])
+dic_raw_1$lista_sugerencias=sapply(lista_sugerencias,
+                                          FUN=function(x){
+                                            if(length(x)>=1) {return(paste(x,collapse=","))}
+                                            if(length(x)==0){return(NA)}
+                                            })
+# eliminamos NA
+
+dic_raw_1 = dic_raw_1[!is.na(dic_raw_1$word_curada),]
+dim(dic_raw_1)
+```
+
+
+# Primer modelo de curado de los chistes
+
+
+
+```{r}
+knitr::kable(head(dic_raw_1,20))
+texto_tokens= texto_tokens %>% right_join(dic_raw_1,word_curada,by="word")
+
+```
+
+
+
+## Siguiente paso tratamiento de los datos curados y generación de las Document Term Matrix
+
+
+Primera aproximación generación dela DTM del corpus de peticiones curadas. Cruzar estos datos con los tópicos/key words de losa chistes.
+Podéis hacerlo con tidytext o con tm (o con quanteda).
+
+
+```{r}
+library(tm)
+library(tidytext)
+texto_tokens$N=1
+DTM=cast_dtm(texto_tokens,document="titulo",term="word_curada",value=N)
+MM=as.matrix(DTM)
+titulos=row.names(MM)
+MM=as.tibble(MM)
+MM$titulo=titulos
+```
+
+
+
+
+
+
+```{r}
+C1=texto_df %>% select(titulo,C1)
+
+df= C1 %>% right_join(MM %>%,by="titulo")
+glimpse(df)
+
+
+
+library(naivebayes)
+
+set.seed(1)
+nrow(df)
+Ntraining=floor(0.8*nrow(df))
+Ntraining
+Ntesting=nrow(df)-Ntraining
+Ntesting
+
+training=sample(1:nrow(df),size=Ntraining,replace = FALSE)
+testing=setdiff(1:row(df),training)
+train_data=df[training,]
+testing_data=df[testing,-1]
+
+
+```
+
+
+
+
+
+
+# Word to vect
+
+
+https://github.com/bnosac/word2vec
+
+
+```{r}
+#install.packages("devtools","Rtools")
+#install.packages("word2vec")
+
+library(word2vec)
+txt_clean=txt_clean_word2vec(x=text_df$text_utf8, ascii = FALSE, alpha = TRUE, tolower = TRUE, trim = TRUE)
+str(txt_clean)
+model=word2vec(x=txt_clean,
+  type = "skip-gram",
+  dim = 50,
+  window = 10,
+  iter = 5L,
+  lr = 0.05,
+  hs = FALSE,
+  negative = 5L,
+  sample = 0.001,
+  min_count = 5L,
+  split = c(" \n,.-!?:;/\"#$%&'()*+<=>@[]\\^_`{|}~\t\v\f\r", ".\n?!"),
+  stopwords = character(),
+  threads = 1L,
+  encoding = "UTF-8"
+)
+```
+
+
+```{r}
+embeding=as.matrix(model)
+emb <- predict(model, c("autobus", "jaimito", "mujer"), type = "embedding")
+emb
+nn  <- predict(model, c("jaimito", "profesor"), type = "nearest", top_n = 5)
+nn
+```
+
+
+
+```{r}
+doc2vec(model,c("padre","madre","hijo"))
+```
+
+
+```{r}
+M=as.matrix(model)
+dim(M)
+#Simi=word2vec_similarity(M,M,top_n=+Inf, type="cosine")
+cosine <- function(x,y) sum(x * y)/sqrt(sum(x^2)*sum(y^2))
+# install.packages("proxy")
+library(proxy)
+SS=as.matrix(simil(M,method=cosine))
+diag(SS)=1
+D=sqrt(1-SS)
+dimnames(D)=list(dimnames(M)[[1]],dimnames(M)[[1]])
+sol_MDS=cmdscale(D,k = 3,list=TRUE)
+str(sol_MDS)
+par(mfrow=c(1,3))
+plot(sol_MDS$points[,c(1,2)])
+text(sol_MDS$points[,c(1,2)],dimnames(M)[[1]])
+plot(sol_MDS$points[,c(1,3)])
+text(sol_MDS$points[,c(1,3)],dimnames(M)[[1]])
+plot(sol_MDS$points[,c(2,3)])
+text(sol_MDS$points[,c(2,3)],dimnames(M)[[1]])
+par(mfrow=c(1,1))
+```
+
+
+
+
+
+
+# Naive bayes
+Podéis utilizar algún algoritmo  de naivebayes con los metadatos  de los chistes (fichero que se explica abajo) o con topic models.
+
+
+## Más chistes con metadatos
+
+En el fichero de este git "chistes_con_metadatos.csv" hay más chistes con dos columnas de metadatos para practicar.
