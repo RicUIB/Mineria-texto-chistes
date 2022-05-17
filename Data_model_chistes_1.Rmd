@@ -22,6 +22,7 @@ urlcolor: blue
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,cache=FALSE)
 library(tidyverse)
+library(readr)
 ```
 
 # Primera aproximacion de NLP para el análisis de un conjunto de chistes con título
@@ -157,7 +158,7 @@ knitr::kable(head(dic_raw_1,20))
 ```
 
 
-### Salvar en excel 
+### Salvar en csv 
 
 
 
@@ -194,7 +195,7 @@ chistes=paste(text_raw$word,collapse=" ")
 writeLines(text=chistes,con = file("chistes.txt"))}
 
 
-model=train_word2vec("chistes.txt",output_file="chistes.bin",vectors=10,threads=1,window=12, cbow=FALSE,min_count=5,iter=5, force=TRUE, negative_samples=5)
+model=train_word2vec("chistes.txt","chistes.bin",vectors=10,threads=1,window=12, cbow=FALSE,min_count=5,iter=5, force=TRUE, negative_samples=5)
 
 
 modelo=read.vectors("chistes.bin")
