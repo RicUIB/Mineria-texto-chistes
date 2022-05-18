@@ -1,17 +1,17 @@
 ---
-title: "Introducción y enunciado de la práctica análisis de chsites"
+title: "Introducción y enunciado de la práctica análisis de chistes"
 author: ''
 date: "16/05/2022"
 output:
-  pdf_document:
-    toc: yes
-    number_sections: yes
-  word_document:
-    toc: yes
   html_document: 
     toc: yes
     number_sections: yes
     keep_md: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+    number_sections: yes
 linkcolor: red
 header-includes: \renewcommand{\contentsname}{Contenidos}
 citecolor: blue
@@ -359,17 +359,17 @@ par(mfrow=c(1,1))
 
 
 # Naive bayes
+
 Podéis utilizar algún algoritmo  de naivebayes con los metadatos  de los chistes (fichero que se explica abajo) o con topic models.
 
 
-## Más chistes con metadatos
-
-En el fichero de este git "chistes_con_metadatos.csv" hay más chistes con dos columnas de metadatos para practicar.
+# Enunciado del taller 
 
 
-# Enunciado
 
-Basándonos en  las ayudas de Enunciado_taller2_chistes_con_metadatos.Rmd" lo anterior generar un modelo de datos con 4 tópicos (de topic models o combinado con categorías o palabras clave. Asignar cada tópico a su $\alpha$ más alto) y un diccionario de palabras curadas por chistes.
+Basándonos en  las ayudas de Enunciado_taller2_chistes_con_metadatos.Rmd" lo anterior generar un modelo de datos con 4 tópicos (de topic models o combinado con categorías o palabras clave. Asignar cada tópico a su $\gamma$ más alto) y un diccionario de palabras curadas por chistes.
+
+Entregad un informe contestando estas dos cuestiones (enviad Rmd y html).
 
 
 ## Cuestión 1
@@ -378,4 +378,8 @@ Naive Bayes para predecir las 4 categorias de chistes a partir de las variables 
 
 ## Cuestión 2 
 
-A partir de la librería `word2vec` generar una proyección estudiar  si las palbaras (gammas)
+Calcular para cada palabra  de word2vec (si existe)  el $\beta$ de cada tópico y asignarlo  cada palabra al tópico del $\beta$ más alto.
+
+A partir de la librería `word2vec` generar una proyección  y estudiar   si las palabras se agrupan según los tópicos.
+
+
