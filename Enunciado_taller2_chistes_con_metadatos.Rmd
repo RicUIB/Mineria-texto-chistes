@@ -3,15 +3,15 @@ title: "Introducción y enunciado de la práctica análisis de chsites"
 author: ''
 date: "16/05/2022"
 output:
+  pdf_document:
+    toc: yes
+    number_sections: yes
+  word_document:
+    toc: yes
   html_document: 
     toc: yes
     number_sections: yes
     keep_md: yes
-  word_document:
-    toc: yes
-  pdf_document:
-    toc: yes
-    number_sections: yes
 linkcolor: red
 header-includes: \renewcommand{\contentsname}{Contenidos}
 citecolor: blue
@@ -369,13 +369,13 @@ En el fichero de este git "chistes_con_metadatos.csv" hay más chistes con dos c
 
 # Enunciado
 
-Basandose las ayudas de Enunciado_taller2_chistes_con_metadatos.Rmd" lo anterior generar un modelo de datos con 4 tópicos (de topic models o combinado con catergorías o palabras clave. Asignar cada tópico a su $\alpha$ más alto) y un diiconario de palabras cuaradas por chistes.
+Basándonos en  las ayudas de Enunciado_taller2_chistes_con_metadatos.Rmd" lo anterior generar un modelo de datos con 4 tópicos (de topic models o combinado con categorías o palabras clave. Asignar cada tópico a su $\alpha$ más alto) y un diccionario de palabras curadas por chistes.
 
 
-## Cuestion 1
+## Cuestión 1
 
-Naive bayes para predecir las 4 categorias de chistes a partir de las variables  de presencia ausencia de las palabras. Evaluar el modelo.
+Naive Bayes para predecir las 4 categorias de chistes a partir de las variables  de presencia ausencia de las palabras. Evaluar el modelo.
 
 ## Cuestión 2 
 
-A partir del paque  word2vec generar una proyección estudiar  si las palbaras (gammas)
+A partir de la librería `word2vec` generar una proyección estudiar  si las palbaras (gammas)

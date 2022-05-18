@@ -1,5 +1,5 @@
 ---
-title: "Exploración y curado de chistes"
+title: "Introducción y enunciado de la práctica análisis de chsites"
 author: ''
 date: "16/05/2022"
 output:
@@ -410,7 +410,7 @@ hunspell_analyze(palabras,dic=es_ES)
 ## [1] " st:amador"      "a st:mador fl:a"
 ```
 
-Eliminaremos las palabras que aprezcan menos de $K_{min}=3$ o $K_{max}=500$ veces y números y  tomaremos la primera sugerencia para las palabras que den incorrectas y solo la primera sugerencia.
+Eliminaremos las palabras que aparezcan menos de $K_{min}=3$ o $K_{max}=500$ veces y números y  tomaremos la primera sugerencia para las palabras que den incorrectas y solo la primera sugerencia.
 
 
 
@@ -879,3 +879,17 @@ Podéis utilizar algún algoritmo  de naivebayes con los metadatos  de los chist
 ## Más chistes con metadatos
 
 En el fichero de este git "chistes_con_metadatos.csv" hay más chistes con dos columnas de metadatos para practicar.
+
+
+# Enunciado
+
+Basándonos en  las ayudas de Enunciado_taller2_chistes_con_metadatos.Rmd" lo anterior generar un modelo de datos con 4 tópicos (de topic models o combinado con categorías o palabras clave. Asignar cada tópico a su $\alpha$ más alto) y un diccionario de palabras curadas por chistes.
+
+
+## Cuestión 1
+
+Naive Bayes para predecir las 4 categorias de chistes a partir de las variables  de presencia ausencia de las palabras. Evaluar el modelo.
+
+## Cuestión 2 
+
+A partir de la librería `word2vec` generar una proyección estudiar  si las palbaras (gammas)
