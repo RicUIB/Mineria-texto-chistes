@@ -38,7 +38,7 @@ El fichero "data/chistes_con_metadatos_curado.csv"  contiene  unos 7170 chistes 
 ##  Carga de datos
 
 
-Los datos están en un fichero separado por ";"  contien 5 variables 
+Los datos están en un fichero separado por ";"  contiene 5 variables 
 
 
 * origen: la web de origen del chiste; 100 chistes o pintamanía `factor`
@@ -223,15 +223,41 @@ MM$titulo=titulos
 ```
 
 
+## Generación de tópicos 4 tópicos
 
 
+```{r} 
+library(topicmodels)
+set.seed(22)
+chistes_2=LDA(DTM, k=2, method = "Gibbs", control = NULL, model = NULL)
 
+chistes_documentos <- tidy(chistes_2, matrix = "gamma")
+chistes_documentos%>% arrange(document) 
+tabla_topicos =chistes_documentos %>% pivot_wider(id_cols=document, names_from=topic,values_from= gamma) 
+names(tabla_topicos)[2:3]=paste0("Topico_",names(tabla_topicos)[2:3])
+names(tabla_topicos)
+
+Topico =apply(tabla_topicos[,2:3],1,
+              FUN=function(x) {
+                if(x[1]>x[2]){topico=1}
+                if(x[1]<x[2]){topico=2}
+if(x[1]==x[2]){topico=0}
+return(topico)
+                })
+
+
+tabla_topicos = tabla_topicos %>% mutate(Clase=Topico)
+tabla_topicos
+```
+
+
+Podemos extraer también las categoría o palabras clave pero son demasiadas.
 
 ```{r}
 C1=texto_df %>% select(titulo, C1)
 
 df= C1 %>% right_join(MM,by="titulo")
-glimpse(df)
+names(df)[1:10]
 
 
 
@@ -246,18 +272,19 @@ Ntesting
 
 training=sample(1:nrow(df),size=Ntraining,replace = FALSE)
 testing=setdiff(1:row(df),training)
-train_data=df[training,]
-testing_data=df[testing,-1]
+train_data=df[training,-1]
+testing_data=df[testing,-c(1:2)]
 
 
 ```
 
 
 
+Quizá demasiadas categorías mejor topic models a 2 , 3 o 4 ,categorías.
 
 
 
-# Word to vect
+# Word to vect NUEVA librería word2vec
 
 
 https://github.com/bnosac/word2vec
