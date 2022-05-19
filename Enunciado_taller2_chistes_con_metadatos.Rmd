@@ -29,9 +29,9 @@ library(tidyverse)
 # Análisis de un conjunto de chistes con metadatos 
 
 
-Algunas ayudas y ejemplos en "Data_model_chistes2.Rmd", se ha cambiado a la libreria "word2vec" más reciente pero menos comentada.
+Algunas ayudas y ejemplos en "Data_model_chistes2.Rmd", se ha cambiado a la librería "word2vec" más reciente pero menos comentada.
 
-El fichero "data/chistes_con_metadatos_curado.csv"  contiene  unos 7170 chistes de la web [100chistes.com](https://www.1000chistes.com/) y de [pintamania](https://www.pintamania.com/es/chistes).
+El fichero "data/chistes_con_metadatos_curado.csv"  contiene  unos 7170 chistes de la web [1000chistes.com](https://www.1000chistes.com/) y de [pintamania](https://www.pintamania.com/es/chistes).
 
 
 
@@ -41,12 +41,11 @@ El fichero "data/chistes_con_metadatos_curado.csv"  contiene  unos 7170 chistes 
 Los datos están en un fichero separado por ";"  contiene 5 variables 
 
 
-* origen: la web de origen del chiste; 100 chistes o pintamanía `factor`
+* origen: la web de origen del chiste; 1000chistes o pintamanía `factor`.
 * titulo: EL título del chiste `character`.
 * categoria: cortos|malos|Jaimito; son  una variable `character`  de categorías separadas por "|"
-* palabra_clave: políticos|argentinos; son una una variable `character` de palabras clave separadas por "|"
-tags; 
-* votos: Número de votos `integer`; solo para pintamania
+* palabra_clave: políticos|argentinos; son una una variable `character` de palabras clave separadas por "|".
+* votos: Número de votos `integer`; solo para pintamania.
 * texto: tipo character;  es el texto del chiste en UTF-8 separado por "" `character`. 
 
 
@@ -82,24 +81,34 @@ Criterios iniciales:
 ```{r}
 library(tidytext)
 library(stringr)
-texto_df=data_raw
+texto_df = data_raw
 glimpse(texto_df)
 #arreglo categorias a columnas distintas se podrían pasar a arrays.
-texto_df = texto_df %>% separate(col=c("categorias"),sep="\\|",into=paste0("C",1:5),fill="right")
-texto_df = texto_df %>% separate(col=c("palabra_clave"),sep="\\|",into=paste0("palabra",1:5),fill="right")
-texto_df =texto_df %>% mutate(texto_curado=str_squish(str_replace_all(texto, "\\:|-|#|_", " ")))
+texto_df = texto_df %>% separate(
+  col = c("categorias"),
+  sep = "\\|",
+  into = paste0("C", 1:5),
+  fill = "right"
+)
+texto_df = texto_df %>% separate(
+  col = c("palabra_clave"),
+  sep = "\\|",
+  into = paste0("palabra", 1:5),
+  fill = "right"
+)
+texto_df = texto_df %>% mutate(texto_curado = str_squish(str_replace_all(texto, "\\:|-|#|_", " ")))
 glimpse(texto_df)
 
 ## str_replace_all(text, "\\:|-|#", " ") reemplazo ":" o "-" o "#" por espacio
 # esto es necesario para arreglar "hola:Pepe" que quedaría cómo una palabra si elimino:
 ## str_squish quita espacios  repetidos
 
-texto_tokens=texto_df %>%  unnest_tokens(word, texto_curado)
+texto_tokens = texto_df %>%  unnest_tokens(word, texto_curado)
 glimpse(texto_tokens)
-knitr::kable(head(texto_tokens,20))
-dic_raw_1=sort(unique(texto_tokens$word))
-nw=length(dic_raw_1)# 
-nw # número de poalbaras distintas
+knitr::kable(head(texto_tokens, 20))
+dic_raw_1 = sort(unique(texto_tokens$word))
+nw = length(dic_raw_1)#
+nw # número de palabras distintas
 ```
 
 ## Construcción del modelo de diccionario
@@ -111,7 +120,8 @@ Construiremos una tabla de modelado del corpus de palabras de los chistes:
 * Si es correcta  según un spelling de español  de España (hay que buscar... qué hay mejor)
 
 ```{r}
-count_freq=texto_tokens %>% group_by(word) %>% summarise(N=n())
+count_freq=texto_tokens %>% 
+  group_by(word) %>% summarise(N=n())  
 dic_raw_1 = tibble(word=dic_raw_1) %>% left_join(count_freq,by="word")
 ```
 
@@ -149,8 +159,7 @@ Primero veamos algunos ejemplos de las sugerencias: ver manual en de  [hunspell]
 ```{r}
 library("spelling")
 library("hunspell")
-#https://github.com/titoBouzout/Dictionaries # do
-#es=dictionary(lang = "diccionarios/es_ES.dic", affix = "diccionarios/es_ES.dic", add_words = NULL,  cache = FALSE)
+#https://github.com/titoBouzout/Dictionaries # 
 es_ES<- dictionary("diccionarios/es_ES.dic")
 #print(es_ES)
 list_dictionaries()# estos son los que  vienen por defecto
@@ -165,29 +174,47 @@ Eliminaremos las palabras que aparezcan menos de $K_{min}=3$ o $K_{max}=500$ vec
 
 
 ```{r}
-K_min=3
-K_max=500
-dic_raw_1 = dic_raw_1 %>% filter(N>K_min & N<K_max )
+K_min = 3
+K_max = 500
+dic_raw_1 = dic_raw_1 %>% filter(N > K_min & N < K_max)
 dim(dic_raw_1)
-dic_raw_1= dic_raw_1[-grep("\\w*[0-9]+\\w*\\s*",dic_raw_1$word),]
+dic_raw_1 = dic_raw_1[-grep("\\w*[0-9]+\\w*\\s*", dic_raw_1$word), ]
 dim(dic_raw_1)
 
-palabras_incorrectas= sapply(dic_raw_1$word, FUN=function(x) hunspell_check(x,dic=es_ES))
+palabras_incorrectas = sapply(
+  dic_raw_1$word,
+  FUN = function(x)
+    hunspell_check(x, dic = es_ES)
+)
 table(palabras_incorrectas)
 
-lista_sugerencias= sapply(dic_raw_1$word, FUN=function(x) hunspell_suggest(x,dic=es_ES))
+lista_sugerencias = sapply(
+  dic_raw_1$word,
+  FUN = function(x)
+    hunspell_suggest(x, dic = es_ES)
+)
 
 # nos quedamos con la primera tanto para correctas como para incorrectas
 
-dic_raw_1$word_curada=sapply(lista_sugerencias, FUN=function(x) x[1])
-dic_raw_1$lista_sugerencias=sapply(lista_sugerencias,
-                                          FUN=function(x){
-                                            if(length(x)>=1) {return(paste(x,collapse=","))}
-                                            if(length(x)==0){return(NA)}
-                                            })
+dic_raw_1$word_curada = sapply(
+  lista_sugerencias,
+  FUN = function(x)
+    x[1]
+)
+dic_raw_1$lista_sugerencias = sapply(
+  lista_sugerencias,
+  FUN = function(x) {
+    if (length(x) >= 1) {
+      return(paste(x, collapse = ","))
+    }
+    if (length(x) == 0) {
+      return(NA)
+    }
+  }
+)
 # eliminamos NA
 
-dic_raw_1 = dic_raw_1[!is.na(dic_raw_1$word_curada),]
+dic_raw_1 = dic_raw_1[!is.na(dic_raw_1$word_curada), ]
 dim(dic_raw_1)
 ```
 
@@ -197,8 +224,9 @@ dim(dic_raw_1)
 
 
 ```{r}
-knitr::kable(head(dic_raw_1,20))
-texto_tokens= texto_tokens %>% right_join(dic_raw_1,word_curada,by="word")
+knitr::kable(head(dic_raw_1, 20))
+texto_tokens = texto_tokens %>% 
+  right_join(dic_raw_1, word_curada, by = "word")
 
 ```
 
@@ -214,12 +242,15 @@ Podéis hacerlo con tidytext o con tm (o con quanteda).
 ```{r}
 library(tm)
 library(tidytext)
-texto_tokens$N=1
-DTM=cast_dtm(texto_tokens,document="titulo",term="word_curada",value=N)
-MM=as.matrix(DTM)
-titulos=row.names(MM)
-MM=as_tibble(MM)
-MM$titulo=titulos
+texto_tokens$N = 1
+DTM = cast_dtm(texto_tokens,
+               document = "titulo",
+               term = "word_curada",
+               value = N)
+MM = as.matrix(DTM)
+titulos = row.names(MM)
+MM = as_tibble(MM)
+MM$titulo = titulos
 ```
 
 
@@ -229,24 +260,41 @@ MM$titulo=titulos
 ```{r} 
 library(topicmodels)
 set.seed(22)
-chistes_2=LDA(DTM, k=2, method = "Gibbs", control = NULL, model = NULL)
+chistes_2 = LDA(
+  DTM,
+  k = 2,
+  method = "Gibbs",
+  control = NULL,
+  model = NULL
+)
 
 chistes_documentos <- tidy(chistes_2, matrix = "gamma")
-chistes_documentos%>% arrange(document) 
-tabla_topicos =chistes_documentos %>% pivot_wider(id_cols=document, names_from=topic,values_from= gamma) 
-names(tabla_topicos)[2:3]=paste0("Topico_",names(tabla_topicos)[2:3])
+chistes_documentos %>% arrange(document)
+tabla_topicos = chistes_documentos %>% pivot_wider(id_cols = document,
+                                                   names_from = topic,
+                                                   values_from = gamma)
+names(tabla_topicos)[2:3] = paste0("Topico_", names(tabla_topicos)[2:3])
 names(tabla_topicos)
 
-Topico =apply(tabla_topicos[,2:3],1,
-              FUN=function(x) {
-                if(x[1]>x[2]){topico=1}
-                if(x[1]<x[2]){topico=2}
-if(x[1]==x[2]){topico=0}
-return(topico)
-                })
+Topico = apply(
+  tabla_topicos[, 2:3],
+  1,
+  FUN = function(x) {
+    if (x[1] > x[2]) {
+      topico = 1
+    }
+    if (x[1] < x[2]) {
+      topico = 2
+    }
+    if (x[1] == x[2]) {
+      topico = 0
+    }
+    return(topico)
+  }
+)
 
 
-tabla_topicos = tabla_topicos %>% mutate(Clase=Topico)
+tabla_topicos = tabla_topicos %>% mutate(Clase = Topico)
 tabla_topicos
 ```
 
@@ -254,28 +302,23 @@ tabla_topicos
 Podemos extraer también las categoría o palabras clave pero son demasiadas.
 
 ```{r}
-C1=texto_df %>% select(titulo, C1)
+C1 = texto_df %>% select(titulo, C1)
 
-df= C1 %>% right_join(MM,by="titulo")
+df = C1 %>% right_join(MM, by = "titulo")
 names(df)[1:10]
 
-
-
 library(naivebayes)
-
 set.seed(1)
 nrow(df)
-Ntraining=floor(0.8*nrow(df))
+Ntraining = floor(0.8 * nrow(df))
 Ntraining
-Ntesting=nrow(df)-Ntraining
+Ntesting = nrow(df) - Ntraining
 Ntesting
 
-training=sample(1:nrow(df),size=Ntraining,replace = FALSE)
-testing=setdiff(1:row(df),training)
-train_data=df[training,-1]
-testing_data=df[testing,-c(1:2)]
-
-
+training = sample(1:nrow(df), size = Ntraining, replace = FALSE)
+testing = setdiff(1:row(df), training)
+train_data = df[training, -1]
+testing_data = df[testing, -c(1:2)]
 ```
 
 
@@ -291,13 +334,21 @@ https://github.com/bnosac/word2vec
 
 
 ```{r}
+
 #install.packages("devtools","Rtools")
 #install.packages("word2vec")
 
 library(word2vec)
-txt_clean=txt_clean_word2vec(x=data_raw$texto, ascii = FALSE, alpha = TRUE, tolower = TRUE, trim = TRUE)
+txt_clean = txt_clean_word2vec(
+  x = data_raw$texto,
+  ascii = FALSE,
+  alpha = TRUE,
+  tolower = TRUE,
+  trim = TRUE
+)
 str(txt_clean)
-model=word2vec(x=txt_clean,
+model = word2vec(
+  x = txt_clean,
   type = "skip-gram",
   dim = 50,
   window = 10,
@@ -374,7 +425,7 @@ Entregad un informe contestando estas dos cuestiones (enviad Rmd y html).
 
 ## Cuestión 1
 
-Naive Bayes para predecir las 4 categorias de chistes a partir de las variables  de presencia ausencia de las palabras. Evaluar el modelo.
+Naive Bayes para predecir las 4 categorías de chistes a partir de las variables  de presencia ausencia de las palabras. Evaluar el modelo.
 
 ## Cuestión 2 
 
